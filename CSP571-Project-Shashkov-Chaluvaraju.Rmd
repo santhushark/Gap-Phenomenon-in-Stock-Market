@@ -28,7 +28,54 @@ rm(AAL,AAL1,AAL2,AAMRQ,AAPL,ranges,tickers)
 ```
 
 ```{r}
-# todo: load the actual data into dictionary
+# load the S&P500 historical composition
+SnP_components_raw <- read.csv(file=file.choose())
+```
+```{r}
+# form a set of all stocks tickers
+tickers_set <- c()
+for (composition in SnP_components_raw$tickers) {
+  curr_composition <- strsplit(composition,split = ",")
+  tickers_set <- unique(c(tickers_set,curr_composition[[1]]))
+}
+```
+```{r}
+for (tcr in tickers_set) {
+  listed <- FALSE
+  #print(tcr)
+  # todo: declare start time stamp variable
+  for (i in 1:nrow(SnP_components_raw)) {
+    timestep <- SnP_components_raw[i,]
+    curr_timestamp <- timestep$date[[1]][1]
+
+    
+    
+    if (!(tcr %in% strsplit(timestep$tickers,split = ",")[[1]])){
+      # ticker not in the composition
+      if (listed){# stock was listed but now it is not
+        # todo: form an entry in the list containing start and stop time stamps
+        listed = FALSE
+        
+      }
+
+
+    } else {# ticker is in the current composition
+      
+      if (!listed){# stock was not listed previously
+        listed = TRUE
+        # todo: update start range time stamp
+      }
+      # todo: update last seen time stamp
+      
+      
+    }
+    
+    
+  }
+  # update global dictionary
+  
+}
+
 ```
 
 
