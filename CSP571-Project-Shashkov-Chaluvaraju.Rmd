@@ -9,6 +9,74 @@ author: Oleksandr Shashkov and Santosh Chaluvaraju
         Illinois Institute of Technology
 ---
 
+## SANTOSH CODE TO prepare dictionary (Please change the csv path)
+```{r}
+rm(list = ls())
+```
+
+```{r}
+getList <- function(str, delimiter)
+{
+  return (unique(unlist(strsplit(str,delimiter))))
+}
+```
+
+```{r}
+df <- read.csv("/home/santosh/Desktop/MASTERS/STUDIES_MSDS/SEM_2_summer/Data_preparation_and_analysis/PROJECT/git_work/Gap-Phenomenon-in-Stock-Market/S&P 500 Historical Components & Changes(03-14-2022).csv")
+
+#list of ticker list
+listOfTkrList<- list()
+for (x in 1:2648) {
+  #getting ticker list of each row i.e. for a particular date 
+    listOfTkrList[[x]] <- getList(df[x,2], ",")
+}
+#creating ticker period dictionary
+tkrperiodDict <- dict()
+x <- 1
+
+#Iterating over list of ticker list
+for (tkrList in listOfTkrList) {
+  #Date of row x
+  startDate <- df[x,1]
+  
+  #Iterating over each ticker in each list
+  for (tkr in listOfTkrList[[x]]) {
+    y <- x + 1
+    #Iterating over each list after "tkrList" in list of lists i.e. listOfTkrList
+    for (i in y:2648) {
+      if(tkr %in% listOfTkrList[[i]]){
+        index = which(listOfTkrList[[i]] == tkr)
+        listOfTkrList[[i]] <- listOfTkrList[[i]][-index]
+        endDate = df[i,1]
+      }else{
+        #If dictionary already has the key append the list
+        if(tkrperiodDict$has(tkr)){
+          periodList <- tkrperiodDict$get(tkr)
+          tkrperiodDict$set(tkr, append(periodList, list(list(startDate, endDate))))
+        }
+        # ELSE make a new entry
+        else{
+          tkrperiodDict$set(tkr, list(list(startDate, endDate)))
+        }
+        break
+      }
+    }
+    
+  }
+  
+  x <- x + 1
+  if(x == 2648){
+    break
+  }
+  
+}
+
+```
+```{r}
+print(tkrperiodDict$get("AAL"))
+```
+## END SANtOSH CODE
+
 # 1. Removing Survival Bias
 
 ```{r}
