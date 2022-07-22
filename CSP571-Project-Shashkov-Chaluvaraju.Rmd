@@ -84,15 +84,15 @@ library(collections)
 ```
 ```{r}
 # mock up dictionary using list of lists to emulate ticker-ranges pairs
-tickers <- c("AAL","AAMRQ","AAPL")
-AAL1 <- list(as.Date("1/2/1996","%m/%d/%Y"),as.Date("1/13/1997","%m/%d/%Y"))
-AAL2 <- list(as.Date("3/23/2015","%m/%d/%Y"),as.Date("3/2/2022","%m/%d/%Y"))
-AAL <- list(AAL1,AAL2)
-AAMRQ <- list(list(as.Date("1/2/1996","%m/%d/%Y"),as.Date("3/10/2003","%m/%d/%Y")))
-AAPL <- list(list(as.Date("1/2/1996","%m/%d/%Y"),as.Date("3/2/2022","%m/%d/%Y")))
-ranges <- list(AAL,AAMRQ,AAPL)
-sp500_composition <- dict(items = ranges, keys = tickers)
-rm(AAL,AAL1,AAL2,AAMRQ,AAPL,ranges,tickers)
+# tickers <- c("AAL","AAMRQ","AAPL")
+# AAL1 <- list(as.Date("1/2/1996","%m/%d/%Y"),as.Date("1/13/1997","%m/%d/%Y"))
+# AAL2 <- list(as.Date("3/23/2015","%m/%d/%Y"),as.Date("3/2/2022","%m/%d/%Y"))
+# AAL <- list(AAL1,AAL2)
+# AAMRQ <- list(list(as.Date("1/2/1996","%m/%d/%Y"),as.Date("3/10/2003","%m/%d/%Y")))
+# AAPL <- list(list(as.Date("1/2/1996","%m/%d/%Y"),as.Date("3/2/2022","%m/%d/%Y")))
+# ranges <- list(AAL,AAMRQ,AAPL)
+# sp500_composition <- dict(items = ranges, keys = tickers)
+# rm(AAL,AAL1,AAL2,AAMRQ,AAPL,ranges,tickers)
 ```
 
 ```{r}
@@ -161,16 +161,20 @@ for (tcr in tickers_set) {
 
 
 ```{r}
+library(tidyverse)
+library(tidyquant)
 # process dictionary to download stocks data for the ranges
 for (stock in sp500_composition$keys()) {
   for (rng in sp500_composition$get(stock)){
     cat("ticker:",stock,"start:",
         format.Date(rng[[1]][1]),
         "stop:",format.Date(rng[[2]][1]),"\n")
-    # todo: download stocks data here having ticker and time stamps
-
-
+    # download stocks data here having ticker and time stamps
+    stock_prices <- tq_get(stock, from = rng[[1]][1], to = rng[[2]][1] )
+    # save it to the file
+    file_name <- paste(stock,rng[[1]][1],"-",rng[[2]][1], sep = "-")
+    file_name <- paste(file_name,"csv", sep = ".")
+    write.table(stock_prices , file = file_name)
   }
-  
 }
 ```
