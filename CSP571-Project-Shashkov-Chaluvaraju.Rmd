@@ -108,47 +108,60 @@ for (composition in SnP_components_raw$tickers) {
 }
 ```
 ```{r}
+# form a dictionary where a key is a ticker 
+# and a value is a list of data ranges when a stock was in the S&P index
+
+sp500_composition <- dict()
+counter = 1
+# iterate through the list of historical S&P components
 for (tcr in tickers_set) {
+  cat("Processing ticker:",tcr,"(",counter,")","\n")
   listed <- FALSE
-  #print(tcr)
-  # todo: declare start time stamp variable
+  # declare time stamp variables
+  start_timestamp <- Sys.Date()
+  last_timestamp <- Sys.Date()
+  # list of ranges when the current stock was a part of S&P index
+  range_list <- list()
+  # iterate through the time steps
   for (i in 1:nrow(SnP_components_raw)) {
     timestep <- SnP_components_raw[i,]
     curr_timestamp <- timestep$date[[1]][1]
-
-    
-    
     if (!(tcr %in% strsplit(timestep$tickers,split = ",")[[1]])){
-      # ticker not in the composition
-      if (listed){# stock was listed but now it is not
-        # todo: form an entry in the list containing start and stop time stamps
-        listed = FALSE
+      # ticker is not in the current composition
+      if (listed){# stock was listed before but now it is not
+        # form an entry in the list containing start and stop time stamps
+        range_entry <- list(start_timestamp,last_timestamp)
+        # add it to the list of ranges
+        range_list <- append(range_list, list(range_entry))
         
+        listed = FALSE
       }
-
-
     } else {# ticker is in the current composition
-      
       if (!listed){# stock was not listed previously
+        # start tracking new range
+        start_timestamp <- curr_timestamp
         listed = TRUE
-        # todo: update start range time stamp
       }
-      # todo: update last seen time stamp
-      
-      
     }
-    
-    
+    last_timestamp <- curr_timestamp
   }
-  # update global dictionary
-  
+  # we are done with current ticker
+  if (listed){  # need to check if the range needs to be closed
+    # form an entry in the list containing start and stop time stamps
+    range_entry <- list(start_timestamp,last_timestamp)
+    # add it to the list of ranges
+    range_list <- append(range_list, list(range_entry))
+  }
+  # add ticker and ranges to global dictionary
+  sp500_composition$set(tcr,c(range_list))
+  counter <- counter + 1
 }
 
 ```
 
 
 ```{r}
-# mock up of processing dicitonary to download stocks data for the ranges
+# process dictionary to download stocks data for the ranges
 for (stock in sp500_composition$keys()) {
   for (rng in sp500_composition$get(stock)){
     cat("ticker:",stock,"start:",
