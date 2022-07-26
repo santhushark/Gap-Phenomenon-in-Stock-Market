@@ -97,6 +97,8 @@ library(collections)
 
 ```{r}
 # load the S&P500 historical composition
+#SnP_components_raw <- read.csv("/home/santosh/Desktop/MASTERS/STUDIES_MSDS/SEM_2_summer/Data_preparation_and_analysis/PROJECT/git_work/Gap-Phenomenon-in-Stock-Market/S&P 500 Historical Components & Changes(03-14-2022).csv")
+
 SnP_components_raw <- read.csv(file=file.choose())
 ```
 ```{r}
@@ -169,12 +171,114 @@ for (stock in sp500_composition$keys()) {
     cat("ticker:",stock,"start:",
         format.Date(rng[[1]][1]),
         "stop:",format.Date(rng[[2]][1]),"\n")
-    # download stocks data here having ticker and time stamps
-    stock_prices <- tq_get(stock, from = rng[[1]][1], to = rng[[2]][1] )
+    # download stocks data here having ticker and time stamps. tq_get returns data in tibble form, convert tibble data into dataframe before saving
+    stock_prices_df <- as.data.frame(tq_get(stock, from = rng[[1]][1], to = rng[[2]][1]))
     # save it to the file
     file_name <- paste(stock,rng[[1]][1],"-",rng[[2]][1], sep = "-")
+    #Putting all the files inside data folder
+    file_name <- paste("data",file_name,sep = "/")
     file_name <- paste(file_name,"csv", sep = ".")
-    write.table(stock_prices , file = file_name)
+    write.csv(stock_prices_df , file_name, row.names = FALSE)
   }
+}
+```
+
+
+# NOT NECESSARY if your data folder has all the files downloaded from GIT, because git has data files which are appropriate
+#Get all CSV files along with their full path
+#Remove CSV files of tickers with in appropriate data
+```{r}
+path <- "/home/santosh/Desktop/MASTERS/STUDIES_MSDS/SEM_2_summer/Data_preparation_and_analysis/PROJECT/git_work/Gap-Phenomenon-in-Stock-Market/data" 
+filesList <- list.files(path=path, pattern=NULL, all.files=FALSE, full.names=TRUE)
+
+for (file in filesList) {
+  #Remove files if it contains less than or equal to 2 columns
+  if(ncol(read.csv(file)) <= 2){
+    file.remove(file)
+  }
+  
+}
+```
+
+#Get all CSV files along with their full path
+```{r}
+path <- "/home/santosh/Desktop/MASTERS/STUDIES_MSDS/SEM_2_summer/Data_preparation_and_analysis/PROJECT/git_work/Gap-Phenomenon-in-Stock-Market/data" 
+filesList <- list.files(path=path, pattern=NULL, all.files=FALSE, full.names=TRUE)
+```
+
+#Function to detect gaps
+```{r}
+detect_gaps <- function(last_h, last_l, h, l)
+{
+  gap_size = 0.0
+  gap_type = "NONE"
+  if(last_l > h){
+    gap_type = "DOWN"
+    gap_size = (h - last_l)/last_l
+  }
+  else if(last_h < l){
+    gap_type = "UP"
+    gap_size = (l - last_h)/last_h
+  }
+  gap_list = list(gap_type, gap_size)
+  
+  return (gap_list)
+}
+```
+
+#Preprocessing: Detecting gaps and types, Calculating ranges, relative volume and adding it into new columns 
+```{r}
+firstFile = TRUE
+for (file in filesList) {
+  
+  print(file)
+  #load CSV file  
+  df <- read.csv(file)
+  
+  gap_list <- list()
+  range <- list()
+  dailyReturns <- list()
+  relativeVolume <- list()
+  volumeMean <- mean(df$volume)
+  
+  for(i in 1:nrow(df)){
+    if(i == 1){
+      gap_list[[i]] <- list("NONE", 0.0)
+    }
+    else{
+      gap_list[[i]] <- detect_gaps(df[i-1, 4], df[i-1, 5], df[i,4], df[i,5])
+    }
+    #calculating range and storing it in range list
+    range <- append(range, (df[i,4] - df[i,5]) / df[i,5])
+    
+    #calculating daily returns and storing it in dailyReturns list
+    dailyReturns <- append(dailyReturns, (df[i,6] - df[i,3]) / df[i,3])
+    
+    #calculating relative volume
+    relativeVolume <- append(relativeVolume, df[i, 7]/volumeMean)
+    
+  }
+  df_temp <- as.data.frame(do.call(rbind, gap_list))
+  colnames(df_temp) <- c("gap_type", "gap_size")
+  df <- cbind(df, df_temp)
+  
+  #adding range column
+  df$range <- range
+  
+  #adding dailyReturns column
+  df$dailyReturns <- dailyReturns
+  
+  #adding relativeVolume column
+  df$relativeVolume <- relativeVolume
+  
+  #Combining dataframe of each stock into one dataframe
+  if( firstFile){
+    firstFile = FALSE
+    stock_df <- df
+  }
+  else{
+    stock_df <- rbind(stock_df, df)
+  }
+  
 }
 ```
