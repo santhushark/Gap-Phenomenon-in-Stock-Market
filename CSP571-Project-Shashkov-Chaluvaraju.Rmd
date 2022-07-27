@@ -9,7 +9,7 @@ author: Oleksandr Shashkov and Santosh Chaluvaraju
         Illinois Institute of Technology
 ---
 
-## SANTOSH CODE TO prepare dictionary (Please change the csv path)
+## SANTOSH CODE TO prepare dictionary (Please change the csv path) (Buggy Code needs fix)
 ```{r}
 rm(list = ls())
 ```
@@ -228,56 +228,60 @@ detect_gaps <- function(last_h, last_l, h, l)
 
 #Preprocessing: Detecting gaps and types, Calculating ranges, relative volume and adding it into new columns 
 ```{r}
-firstFile = TRUE
+
 for (file in filesList) {
   
-  print(file)
+  #print(file)
   #load CSV file  
   df <- read.csv(file)
   
-  gap_list <- list()
-  range <- list()
-  dailyReturns <- list()
-  relativeVolume <- list()
-  volumeMean <- mean(df$volume)
-  
-  for(i in 1:nrow(df)){
-    if(i == 1){
-      gap_list[[i]] <- list("NONE", 0.0)
+  #Perform preprocessing only if the data frame has more than 25 rows else ignore
+  if(nrow(df) > 25){
+    
+    gap_list <- list()
+    range <- list()
+    dailyReturns <- list()
+    relativeVolume <- list()
+    
+    df <- df[!is.na(df$high),]
+    df <- df[!is.na(df$low),]
+    
+    for(i in 1:nrow(df)){
+      if(i == 1){
+        gap_list[[i]] <- list("NONE", 0.0)
+        relativeVolume <- append(relativeVolume, 0.0)
+      }
+      else{
+        #print(i)
+        gap_list[[i]] <- detect_gaps(df[i-1, 4], df[i-1, 5], df[i,4], df[i,5])
+        #calculating relative volume
+        relativeVolume <- append(relativeVolume, (df[i, 7] - df[i-1, 7])/df[i-1, 7])
+      }
+      #calculating range and storing it in range list
+      range <- append(range, (df[i,4] - df[i,5]) / df[i,5])
+      
+      #calculating daily returns and storing it in dailyReturns list
+      dailyReturns <- append(dailyReturns, (df[i,6] - df[i,3]) / df[i,3])
+      
     }
-    else{
-      gap_list[[i]] <- detect_gaps(df[i-1, 4], df[i-1, 5], df[i,4], df[i,5])
-    }
-    #calculating range and storing it in range list
-    range <- append(range, (df[i,4] - df[i,5]) / df[i,5])
+    df_temp <- as.data.frame(do.call(rbind, gap_list))
+    colnames(df_temp) <- c("gap_type", "gap_size")
+    df <- cbind(df, df_temp)
+    #adding range column
+    df$range <- range
     
-    #calculating daily returns and storing it in dailyReturns list
-    dailyReturns <- append(dailyReturns, (df[i,6] - df[i,3]) / df[i,3])
+    #adding dailyReturns column
+    df$dailyReturns <- dailyReturns
     
-    #calculating relative volume
-    relativeVolume <- append(relativeVolume, df[i, 7]/volumeMean)
+    #adding relativeVolume column
+    df$relativeVolume <- relativeVolume
     
-  }
-  df_temp <- as.data.frame(do.call(rbind, gap_list))
-  colnames(df_temp) <- c("gap_type", "gap_size")
-  df <- cbind(df, df_temp)
-  
-  #adding range column
-  df$range <- range
-  
-  #adding dailyReturns column
-  df$dailyReturns <- dailyReturns
-  
-  #adding relativeVolume column
-  df$relativeVolume <- relativeVolume
-  
-  #Combining dataframe of each stock into one dataframe
-  if( firstFile){
-    firstFile = FALSE
-    stock_df <- df
-  }
-  else{
-    stock_df <- rbind(stock_df, df)
+    #Putting all the pre processed files inside pre_processed_data folder
+    file_name <- paste(sub('\\.csv$', '', basename(file)), "preprocessed", sep = "_" )
+    file_name <- paste("pre_processed_data",file_name,sep = "/")
+    file_name <- paste(file_name,"csv", sep = ".")
+    df <- apply(df,2,as.character)
+    write.csv(df , file_name, row.names = FALSE)
   }
   
 }
