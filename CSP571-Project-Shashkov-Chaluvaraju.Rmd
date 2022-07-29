@@ -202,7 +202,9 @@ for (file in filesList) {
 
 #Get all CSV files along with their full path
 ```{r}
-path <- "/home/santosh/Desktop/MASTERS/STUDIES_MSDS/SEM_2_summer/Data_preparation_and_analysis/PROJECT/git_work/Gap-Phenomenon-in-Stock-Market/data" 
+path <- "/home/santosh/Desktop/MASTERS/STUDIES_MSDS/SEM_2_summer/Data_preparation_and_analysis/PROJECT/git_work/Gap-Phenomenon-in-Stock-Market/data"
+
+path <- "C:\\Users\\Alex\\Documents\\IIT\\CSP571\\Assignments\\Project\\Gap-Phenomenon-in-Stock-Market\\data"
 filesList <- list.files(path=path, pattern=NULL, all.files=FALSE, full.names=TRUE)
 ```
 
@@ -228,6 +230,7 @@ detect_gaps <- function(last_h, last_l, h, l)
 
 #Preprocessing: Detecting gaps and types, Calculating ranges, relative volume and adding it into new columns 
 ```{r}
+library(lubridate)
 
 for (file in filesList) {
   
@@ -275,6 +278,10 @@ for (file in filesList) {
     
     #adding relativeVolume column
     df$relativeVolume <- relativeVolume
+    
+    # extract day of the week and month as potential features
+    df$weekday <- wday(df$date, week_start=1)
+    df$month <- month(mdy(df$date))
     
     #Putting all the pre processed files inside pre_processed_data folder
     file_name <- paste(sub('\\.csv$', '', basename(file)), "preprocessed", sep = "_" )
