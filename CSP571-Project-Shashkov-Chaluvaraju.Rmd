@@ -357,4 +357,10 @@ for (file in filesList) {
   
 }
 ```
+# TODO: save all the gaps into a single dataframe, preserve it inot CSV too
 
+# TODO: run some statistical analysis, produce graphs - i.e. correlations, 
+autocorrelation, distributions, etc. - anything to show some information about gaps
+
+# TODO: Model it and try to predict !!!!
+we may limit it to just one day after the gap for the purpose of the project
