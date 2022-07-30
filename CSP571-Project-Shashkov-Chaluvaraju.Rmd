@@ -193,7 +193,7 @@ for (stock in sp500_composition$keys()) {
 gfpcdf <- as.data.frame(getSymbols("^GSPC", auto.assign = FALSE, from= "1985-01-01", src="yahoo"))
 gfpcdf <- tibble::rownames_to_column(gfpcdf, "Date")
 #Putting SPX data file inside data folder
-file_name <- paste("data","SPX",sep = "/")
+file_name <- paste("data","GSPC",sep = "/")
 file_name <- paste(file_name,"csv", sep = ".")
 write.csv(gfpcdf , file_name, row.names = FALSE)
 ```
@@ -225,9 +225,9 @@ for (file in filesList) {
 
 #Get all CSV files along with their full path
 ```{r}
-#path <- "/home/santosh/Desktop/MASTERS/STUDIES_MSDS/SEM_2_summer/Data_preparation_and_analysis/PROJECT/git_work/Gap-Phenomenon-in-Stock-Market/data"
+path <- "/home/santosh/Desktop/MASTERS/STUDIES_MSDS/SEM_2_summer/Data_preparation_and_analysis/PROJECT/git_work/Gap-Phenomenon-in-Stock-Market/data"
 
-path <- "C:\\Users\\Alex\\Documents\\IIT\\CSP571\\Assignments\\Project\\Gap-Phenomenon-in-Stock-Market\\data"
+#path <- "C:\\Users\\Alex\\Documents\\IIT\\CSP571\\Assignments\\Project\\Gap-Phenomenon-in-Stock-Market\\data"
 filesList <- list.files(path=path, pattern=NULL, all.files=FALSE, full.names=TRUE)
 ```
 
@@ -254,7 +254,7 @@ detect_gaps <- function(last_h, last_l, h, l)
 
 #Preprocessing SPX(S&P 500 index) ticker data
 ```{r}
-spxdf <- read.csv("data/SPX.csv")
+spxdf <- read.csv("data/GSPC.csv")
 spxDailyReturns <- list()
 for(i in 1:nrow(spxdf)){
   #calculating daily returns and storing it in spxDailyReturns list
@@ -265,7 +265,7 @@ for(i in 1:nrow(spxdf)){
 spxdf$spxdailyReturns <- spxDailyReturns
 
 #Putting pre processed file inside pre_processed_data folder
-file_name <- paste("SPX", "preprocessed", sep = "_" )
+file_name <- paste("GSPC", "preprocessed", sep = "_" )
 file_name <- paste("pre_processed_data",file_name,sep = "/")
 file_name <- paste(file_name,"csv", sep = ".")
 spxdf <- apply(spxdf,2,as.character)
@@ -293,14 +293,14 @@ for(i in 1:nrow(spxdf)){
 for (file in filesList) {
   # load CSV file  
   df <- read.csv(file)
+  print(file)
   
+  df <- df[!is.na(df$high),]
+  df <- df[!is.na(df$low),]
   # Perform preprocessing only if the data frame has more than 25 rows else ignore
   if(nrow(df) > 25){
     
     gap_list <- list()
-
-    df <- df[!is.na(df$high),]
-    df <- df[!is.na(df$low),]
     
     for(i in 1:nrow(df)){
       if(i == 1){
@@ -357,8 +357,34 @@ for (file in filesList) {
   
 }
 ```
-# TODO: save all the gaps into a single dataframe, preserve it inot CSV too
 
+# save all the gaps into a single dataframe, preserve it inot CSV
+```{r}
+path <- "/home/santosh/Desktop/MASTERS/STUDIES_MSDS/SEM_2_summer/Data_preparation_and_analysis/PROJECT/git_work/Gap-Phenomenon-in-Stock-Market/pre_processed_data"
+
+#path <- "C:\\Users\\Alex\\Documents\\IIT\\CSP571\\Assignments\\Project\\Gap-Phenomenon-in-Stock-Market\\data"
+filesList <- list.files(path=path, pattern=NULL, all.files=FALSE, full.names=TRUE)
+isFirstFile <- TRUE
+for (file in filesList) {
+  print(file)
+  df <- read.csv(file)
+  df <- df[df$gap_type %in% c('DOWN', 'UP'), ]
+  if(isFirstFile){
+    final_stock_df <- df
+    isFirstFile <- FALSE
+  }else{
+    final_stock_df <- rbind(final_stock_df, df)
+  }
+  
+}
+print(nrow(final_stock_df))
+
+#Putting all the pre processed files inside pre_processed_data folder
+file_name <- paste("final", "preprocessed", sep = "_" )
+file_name <- paste("final_pre_processed_data",file_name,sep = "/")
+file_name <- paste(file_name,"csv", sep = ".")
+write.csv(final_stock_df , file_name, row.names = FALSE)
+```
 # TODO: run some statistical analysis, produce graphs - i.e. correlations, 
 autocorrelation, distributions, etc. - anything to show some information about gaps
 
