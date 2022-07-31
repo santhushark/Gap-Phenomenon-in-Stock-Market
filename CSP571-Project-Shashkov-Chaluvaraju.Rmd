@@ -18,6 +18,7 @@ library(tidyquant)
 library(lubridate)
 library(dplyr)
 library(timetk)
+library(quantmod)
 ```
 
 ## SANTOSH CODE TO prepare dictionary (Please change the csv path) (Buggy Code needs fix)
@@ -190,12 +191,12 @@ for (stock in sp500_composition$keys()) {
 
 #Downloading S&P500 index GSPC stock data
 ```{r}
-gfpcdf <- as.data.frame(getSymbols("^GSPC", auto.assign = FALSE, from= "1985-01-01", src="yahoo"))
-gfpcdf <- tibble::rownames_to_column(gfpcdf, "Date")
-#Putting SPX data file inside data folder
-file_name <- paste("data","GSPC",sep = "/")
-file_name <- paste(file_name,"csv", sep = ".")
-write.csv(gfpcdf , file_name, row.names = FALSE)
+# gfpcdf <- as.data.frame(getSymbols("^GSPC", auto.assign = FALSE, from= "1985-01-01", src="yahoo"))
+# gfpcdf <- tibble::rownames_to_column(gfpcdf, "Date")
+# #Putting SPX data file inside data folder
+# file_name <- paste("data","GSPC",sep = "/")
+# file_name <- paste(file_name,"csv", sep = ".")
+# write.csv(gfpcdf , file_name, row.names = FALSE)
 ```
 # Alex's version of the same 
 # But with the column names matching other stocks
@@ -225,9 +226,9 @@ for (file in filesList) {
 
 #Get all CSV files along with their full path
 ```{r}
-path <- "/home/santosh/Desktop/MASTERS/STUDIES_MSDS/SEM_2_summer/Data_preparation_and_analysis/PROJECT/git_work/Gap-Phenomenon-in-Stock-Market/data"
+#path <- "/home/santosh/Desktop/MASTERS/STUDIES_MSDS/SEM_2_summer/Data_preparation_and_analysis/PROJECT/git_work/Gap-Phenomenon-in-Stock-Market/data"
 
-#path <- "C:\\Users\\Alex\\Documents\\IIT\\CSP571\\Assignments\\Project\\Gap-Phenomenon-in-Stock-Market\\data"
+path <- "C:\\Users\\Alex\\Documents\\IIT\\CSP571\\Assignments\\Project\\Gap-Phenomenon-in-Stock-Market\\data"
 filesList <- list.files(path=path, pattern=NULL, all.files=FALSE, full.names=TRUE)
 ```
 
@@ -254,22 +255,22 @@ detect_gaps <- function(last_h, last_l, h, l)
 
 #Preprocessing SPX(S&P 500 index) ticker data
 ```{r}
-spxdf <- read.csv("data/GSPC.csv")
-spxDailyReturns <- list()
-for(i in 1:nrow(spxdf)){
-  #calculating daily returns and storing it in spxDailyReturns list
-  spxDailyReturns <- append(spxDailyReturns, (spxdf[i,5] - spxdf[i,2]) / spxdf[i,2])
-  
-}
-#adding dailyReturns column
-spxdf$spxdailyReturns <- spxDailyReturns
-
-#Putting pre processed file inside pre_processed_data folder
-file_name <- paste("GSPC", "preprocessed", sep = "_" )
-file_name <- paste("pre_processed_data",file_name,sep = "/")
-file_name <- paste(file_name,"csv", sep = ".")
-spxdf <- apply(spxdf,2,as.character)
-write.csv(spxdf , file_name, row.names = FALSE)
+# spxdf <- read.csv("data/GSPC.csv")
+# spxDailyReturns <- list()
+# for(i in 1:nrow(spxdf)){
+#   #calculating daily returns and storing it in spxDailyReturns list
+#   spxDailyReturns <- append(spxDailyReturns, (spxdf[i,5] - spxdf[i,2]) / spxdf[i,2])
+#   
+# }
+# #adding dailyReturns column
+# spxdf$spxdailyReturns <- spxDailyReturns
+# 
+# #Putting pre processed file inside pre_processed_data folder
+# file_name <- paste("GSPC", "preprocessed", sep = "_" )
+# file_name <- paste("pre_processed_data",file_name,sep = "/")
+# file_name <- paste(file_name,"csv", sep = ".")
+# spxdf <- apply(spxdf,2,as.character)
+# write.csv(spxdf , file_name, row.names = FALSE)
 ```
 
 ```{r}
@@ -285,6 +286,17 @@ for(i in 1:nrow(spxdf)){
         spxdf$return[i] <- (spxdf$adjusted[i]-spxdf$adjusted[i-1])/spxdf$adjusted[i-1]
       }
 }
+
+#Putting pre processed file inside pre_processed_data folder
+file_name <- paste("GSPC", "preprocessed", sep = "_" )
+file_name <- paste("pre_processed_data",file_name,sep = "/")
+file_name <- paste(file_name,"csv", sep = ".")
+spxdf <- apply(spxdf,2,as.character)
+write.csv(spxdf , file_name, row.names = FALSE)
+
+# reload spxdf
+spxdf <- read.csv("pre_processed_data/GSPC_preprocessed.csv")
+rownames(spxdf) <- spxdf$date
 ```
 
 
@@ -360,23 +372,31 @@ for (file in filesList) {
 
 # save all the gaps into a single dataframe, preserve it inot CSV
 ```{r}
-path <- "/home/santosh/Desktop/MASTERS/STUDIES_MSDS/SEM_2_summer/Data_preparation_and_analysis/PROJECT/git_work/Gap-Phenomenon-in-Stock-Market/pre_processed_data"
+#path <- "/home/santosh/Desktop/MASTERS/STUDIES_MSDS/SEM_2_summer/Data_preparation_and_analysis/PROJECT/git_work/Gap-Phenomenon-in-Stock-Market/pre_processed_data"
 
-#path <- "C:\\Users\\Alex\\Documents\\IIT\\CSP571\\Assignments\\Project\\Gap-Phenomenon-in-Stock-Market\\data"
+path <- "C:\\Users\\Alex\\Documents\\IIT\\CSP571\\Assignments\\Project\\Gap-Phenomenon-in-Stock-Market\\pre_processed_data"
 filesList <- list.files(path=path, pattern=NULL, all.files=FALSE, full.names=TRUE)
-isFirstFile <- TRUE
+# remove file describing index
+filesList <- filesList[!grepl("GSPC",filesList)]
+# isFirstFile <- TRUE
+# for (file in filesList) {
+#   print(file)
+#   df <- read.csv(file)
+#   df <- df[df$gap_type %in% c('DOWN', 'UP'), ]
+#   if(isFirstFile){
+#     final_stock_df <- df
+#     isFirstFile <- FALSE
+#   }else{
+#     final_stock_df <- rbind(final_stock_df, df)
+#   }
+final_stock_df <- data.frame()
 for (file in filesList) {
   print(file)
   df <- read.csv(file)
-  df <- df[df$gap_type %in% c('DOWN', 'UP'), ]
-  if(isFirstFile){
-    final_stock_df <- df
-    isFirstFile <- FALSE
-  }else{
-    final_stock_df <- rbind(final_stock_df, df)
-  }
-  
+  df <- df[df$gap_type !='NONE',]
+  final_stock_df <- rbind(final_stock_df, df)
 }
+  
 print(nrow(final_stock_df))
 
 #Putting all the pre processed files inside pre_processed_data folder
@@ -385,8 +405,151 @@ file_name <- paste("final_pre_processed_data",file_name,sep = "/")
 file_name <- paste(file_name,"csv", sep = ".")
 write.csv(final_stock_df , file_name, row.names = FALSE)
 ```
-# TODO: run some statistical analysis, produce graphs - i.e. correlations, 
-autocorrelation, distributions, etc. - anything to show some information about gaps
+
+```{r}
+#cleanup
+rm(list=ls())
+```
+
+# Final clenup
+```{r}
+# load dataframe with gaps
+#file < - "C:\\Users\\Alex\\Documents\\IIT\\CSP571\\Assignments\\Project\\Gap-Phenomenon-in-Stock-Market\\final_pre_processed_data\\final_preprocessed.csv"
+file <- file.choose()
+gaps_df <- read.csv(file)
+
+```
+
+```{r}
+dim(gaps_df)
+summary(gaps_df)
+```
+# the data has to be cleaned as there are: 
+1) inf values in vol_change column and lags
+2) Enormously high returns in some rows and lags
+3) Enormously high ranges in some rows and lags
+4) Enormously high gaps in some rows and lags
+5) gap_type must be a factor
+6) weekday and month and their lags must be factors
+
+```{r}
+summary(gaps_df$vol_change)
+quantile(gaps_df$vol_change,probs=c(.01,.99))
+hist(gaps_df$vol_change, breaks=1000, main = "Volume change distirbution before the cleanup")
+hist(log(gaps_df$vol_change), breaks=1000, main = "Log Volume change distirbution before the cleanup")
+```
+
+```{r}
+# removing rows with infinite and unrealistic values of vol_change and its lags
+# let's limit it within at least 98% range:  ( -0.642356 < and < 8.261169 )
+mx = 8.27
+mn = -0.64
+gaps_df <- gaps_df[gaps_df$vol_change < mx &  gaps_df$vol_change > mn,]
+gaps_df <- gaps_df[gaps_df$vol_change_lag.10 < mx &  gaps_df$vol_change_lag.10 > mn,]
+gaps_df <- gaps_df[gaps_df$vol_change_lag.9 < mx &  gaps_df$vol_change_lag.9 > mn,]
+gaps_df <- gaps_df[gaps_df$vol_change_lag.8 < mx &  gaps_df$vol_change_lag.8 > mn,]
+gaps_df <- gaps_df[gaps_df$vol_change_lag.7 < mx &  gaps_df$vol_change_lag.7 > mn,]
+gaps_df <- gaps_df[gaps_df$vol_change_lag.6 < mx &  gaps_df$vol_change_lag.6 > mn,]
+gaps_df <- gaps_df[gaps_df$vol_change_lag.5 < mx &  gaps_df$vol_change_lag.5 > mn,]
+gaps_df <- gaps_df[gaps_df$vol_change_lag.4 < mx &  gaps_df$vol_change_lag.4 > mn,]
+gaps_df <- gaps_df[gaps_df$vol_change_lag.3 < mx &  gaps_df$vol_change_lag.3 > mn,]
+gaps_df <- gaps_df[gaps_df$vol_change_lag.2 < mx &  gaps_df$vol_change_lag.2 > mn,]
+gaps_df <- gaps_df[gaps_df$vol_change_lag.1 < mx &  gaps_df$vol_change_lag.1 > mn,]
+gaps_df <- gaps_df[gaps_df$vol_change_lag10 < mx &  gaps_df$vol_change_lag10 > mn,]
+gaps_df <- gaps_df[gaps_df$vol_change_lag9 < mx &  gaps_df$vol_change_lag9 > mn,]
+gaps_df <- gaps_df[gaps_df$vol_change_lag8 < mx &  gaps_df$vol_change_lag8 > mn,]
+gaps_df <- gaps_df[gaps_df$vol_change_lag7 < mx &  gaps_df$vol_change_lag7 > mn,]
+gaps_df <- gaps_df[gaps_df$vol_change_lag6 < mx &  gaps_df$vol_change_lag6 > mn,]
+gaps_df <- gaps_df[gaps_df$vol_change_lag5 < mx &  gaps_df$vol_change_lag5 > mn,]
+gaps_df <- gaps_df[gaps_df$vol_change_lag4 < mx &  gaps_df$vol_change_lag4 > mn,]
+gaps_df <- gaps_df[gaps_df$vol_change_lag3 < mx &  gaps_df$vol_change_lag3 > mn,]
+gaps_df <- gaps_df[gaps_df$vol_change_lag2 < mx &  gaps_df$vol_change_lag2 > mn,]
+gaps_df <- gaps_df[gaps_df$vol_change_lag1 < mx &  gaps_df$vol_change_lag1 > mn,]
+
+```
+
+```{r}
+summary(gaps_df$vol_change)
+hist(gaps_df$vol_change, breaks=100, main = "Volume change distirbution after the cleanup")
+
+```
+
+# this took care of all the unreasonable values!!!
+
+```{r}
+gaps_df$gap_type <- as.factor(gaps_df$gap_type)
+gaps_df$weekday <- as.factor(gaps_df$weekday)
+gaps_df$month <- as.factor(gaps_df$month)
+
+gaps_df$weekday_lag.10 <- as.factor(gaps_df$weekday_lag.10)
+gaps_df$month_lag.10 <- as.factor(gaps_df$month_lag.10)
+gaps_df$weekday_lag.9 <- as.factor(gaps_df$weekday_lag.9)
+gaps_df$month_lag.9 <- as.factor(gaps_df$month_lag.9)
+gaps_df$weekday_lag.8 <- as.factor(gaps_df$weekday_lag.8)
+gaps_df$month_lag.8 <- as.factor(gaps_df$month_lag.8)
+gaps_df$weekday_lag.7 <- as.factor(gaps_df$weekday_lag.7)
+gaps_df$month_lag.7 <- as.factor(gaps_df$month_lag.7)
+gaps_df$weekday_lag.6 <- as.factor(gaps_df$weekday_lag.6)
+gaps_df$month_lag.6 <- as.factor(gaps_df$month_lag.6)
+gaps_df$weekday_lag.5 <- as.factor(gaps_df$weekday_lag.5)
+gaps_df$month_lag.5 <- as.factor(gaps_df$month_lag.5)
+gaps_df$weekday_lag.4 <- as.factor(gaps_df$weekday_lag.4)
+gaps_df$month_lag.4 <- as.factor(gaps_df$month_lag.4)
+gaps_df$weekday_lag.3 <- as.factor(gaps_df$weekday_lag.3)
+gaps_df$month_lag.3 <- as.factor(gaps_df$month_lag.3)
+gaps_df$weekday_lag.2 <- as.factor(gaps_df$weekday_lag.2)
+gaps_df$month_lag.2 <- as.factor(gaps_df$month_lag.2)
+gaps_df$weekday_lag.1 <- as.factor(gaps_df$weekday_lag.1)
+gaps_df$month_lag.1 <- as.factor(gaps_df$month_lag.1)
+
+gaps_df$weekday_lag10 <- as.factor(gaps_df$weekday_lag10)
+gaps_df$month_lag10 <- as.factor(gaps_df$month_lag10)
+gaps_df$weekday_lag9 <- as.factor(gaps_df$weekday_lag9)
+gaps_df$month_lag9 <- as.factor(gaps_df$month_lag9)
+gaps_df$weekday_lag8 <- as.factor(gaps_df$weekday_lag8)
+gaps_df$month_lag8 <- as.factor(gaps_df$month_lag8)
+gaps_df$weekday_lag7 <- as.factor(gaps_df$weekday_lag7)
+gaps_df$month_lag7 <- as.factor(gaps_df$month_lag7)
+gaps_df$weekday_lag6 <- as.factor(gaps_df$weekday_lag6)
+gaps_df$month_lag6 <- as.factor(gaps_df$month_lag6)
+gaps_df$weekday_lag5 <- as.factor(gaps_df$weekday_lag5)
+gaps_df$month_lag5 <- as.factor(gaps_df$month_lag5)
+gaps_df$weekday_lag4 <- as.factor(gaps_df$weekday_lag4)
+gaps_df$month_lag4 <- as.factor(gaps_df$month_lag4)
+gaps_df$weekday_lag3 <- as.factor(gaps_df$weekday_lag3)
+gaps_df$month_lag3 <- as.factor(gaps_df$month_lag3)
+gaps_df$weekday_lag2 <- as.factor(gaps_df$weekday_lag2)
+gaps_df$month_lag2 <- as.factor(gaps_df$month_lag2)
+gaps_df$weekday_lag1 <- as.factor(gaps_df$weekday_lag1)
+gaps_df$month_lag1 <- as.factor(gaps_df$month_lag1)
+
+summary(gaps_df)
+```
+```{r}
+# Saving clean data frame
+file_name <- paste("clean", "preprocessed", sep = "_" )
+file_name <- paste("final_pre_processed_data",file_name,sep = "/")
+file_name <- paste(file_name,"csv", sep = ".")
+write.csv(gaps_df , file_name, row.names = FALSE)
+```
+```{r}
+#cleanup
+rm(list=ls())
+```
+
+
+# TODO: run some statistical analysis, produce graphs - i.e. correlations, autocorrelation, distributions, etc. - anything to show some information about gaps
+
+```{r}
+#cleanup
+rm(list=ls())
+```
 
 # TODO: Model it and try to predict !!!!
 we may limit it to just one day after the gap for the purpose of the project
+```{r}
+# load clean dataframe with gaps
+file <- file.choose()
+gaps_df <- read.csv(file)
+```
+
