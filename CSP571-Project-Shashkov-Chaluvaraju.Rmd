@@ -22,6 +22,7 @@ library(quantmod)
 library(corrplot)
 library(zoom)
 library(caret)
+library(Metrics)
 ```
 
 ## SANTOSH CODE TO prepare dictionary (Please change the csv path) (Buggy Code needs fix)
@@ -701,13 +702,28 @@ corrplot(cm, tl.cex=0.5)
 Fitting Linear Model
 ```{r}
 set.seed(1)
-train <- createDataPartition(subCleanDf$return_lag1, p = 0.8, list = FALSE)
+train <- createDataPartition(subCleanDf$return_lag.1, p = 0.8, list = FALSE)
 stockdf_train <- subCleanDf[train, ]
 stockdf_test <- subCleanDf[-train, ]
-stockdf_train_model_ln <- lm(return_lag1 ~., data = stockdf_train)
-summary(stockdf_train_model_ln)
+stockdf_train_model_ln <- lm(return_lag.1 ~., data = stockdf_train)
+smry <- summary(stockdf_train_model_ln)
+print(smry)
 ```
+It is seen from the above summary p-values that, except for gap_size, month, month_lag.9, candle_body_metric_lag.9, return_lag.7, range_lag.6, month_lag.6, weekday_lag.5, month_lag.5, vol_change_lag.3, range_lag.3, weekday_lag.3 and weekday_lag.2, all other features have significant predicting power.
 
+```{r}
+predictTrain <- predict(stockdf_train_model_ln, newdata = stockdf_train)
+cat("Training MSE" , mse(stockdf_train$return_lag.1, predictTrain), "\n")
+cat("Training RMSE" , rmse(stockdf_train$return_lag.1, predictTrain), "\n")
+cat("Model's R-squared" , smry$r.squared, "\n")
+```
+#Performance metrics on test data linear regression
+```{r}
+predictTest <- predict(stockdf_train_model_ln, newdata = stockdf_test)
+cat("Test MSE" , mse(stockdf_test$return_lag.1, predictTest), "\n")
+cat("Test RMSE" , rmse(stockdf_test$return_lag.1, predictTest), "\n")
+```
+The mean squared error and residual mean squared error is almost the same for the trained model on both training and test dataset. Also an r-squared of 0.84 can be considered a good score in finance.
 ```{r}
 #cleanup
 rm(list=ls())
