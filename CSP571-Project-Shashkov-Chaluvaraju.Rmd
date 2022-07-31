@@ -19,6 +19,9 @@ library(lubridate)
 library(dplyr)
 library(timetk)
 library(quantmod)
+library(corrplot)
+library(zoom)
+library(caret)
 ```
 
 ## SANTOSH CODE TO prepare dictionary (Please change the csv path) (Buggy Code needs fix)
@@ -678,12 +681,29 @@ hist(100*gaps_df$candle_body_metric[gaps_df$gap_type == "DOWN" & gaps_df$candle_
 boxplot(100*gaps_df$candle_body_metric[gaps_df$gap_type == "DOWN" & gaps_df$candle_body_metric < unname(qd["99%"])& gaps_df$candle_body_metric > unname(qd["1%"])], horizontal = TRUE, main = "Gap DOWN candle body metric distribution", col = "red")
 
 ```
+
 ```{r}
 # Correlations
 # Create a sub frame
+cleandf <- read_csv("/home/santosh/Desktop/MASTERS/STUDIES_MSDS/SEM_2_summer/Data_preparation_and_analysis/PROJECT/git_work/Gap-Phenomenon-in-Stock-Market/final_pre_processed_data/clean_preprocessed.csv", show_col_types = FALSE)
+cols <- colnames(cleandf)
+cols <- cols[- c(1,2,3,4,5,6,7,8,12)]
+#print(cols)
+cols <- cols[-c(86:148)]
+subCleanDf <- cleandf[, cols]
+cm <- cor(subCleanDf)
+corrplot(cm, tl.cex=0.5)
+#zm()
+```
 
-
-
+Fitting Linear Model
+```{r}
+set.seed(1)
+train <- createDataPartition(subCleanDf$returns_lag1, p = 0.8, list = FALSE)
+stockdf_train <- subCleanDf[train, ]
+stockdf_test <- subCleanDf[-train, ]
+stockdf_train_model_ln <- lm(returns_lag1 ~., data = stockdf_train)
+summary(stockdf_train_model_ln)
 ```
 
 ```{r}
