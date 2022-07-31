@@ -470,7 +470,7 @@ gaps_df <- gaps_df[gaps_df$vol_change_lag1 < mx &  gaps_df$vol_change_lag1 > mn,
 
 ```{r}
 summary(gaps_df$vol_change)
-hist(gaps_df$vol_change, breaks=100, main = "Volume change distirbution after the cleanup")
+hist(gaps_df$vol_change, breaks=100, main = "Volume change distribution after the cleanup")
 
 ```
 
@@ -536,9 +536,155 @@ write.csv(gaps_df , file_name, row.names = FALSE)
 #cleanup
 rm(list=ls())
 ```
+# run statistical analysis, produce graphs - i.e. correlations, distributions, etc. - anything to gain information about gaps
+```{r}
+# load clean dataframe with gaps
+file <- file.choose()
+gaps_df <- read.csv(file)
+gaps_df$gap_type <- as.factor(gaps_df$gap_type)
+gaps_df$weekday <- as.factor(gaps_df$weekday)
+gaps_df$month <- as.factor(gaps_df$month)
+
+gaps_df$weekday_lag.10 <- as.factor(gaps_df$weekday_lag.10)
+gaps_df$month_lag.10 <- as.factor(gaps_df$month_lag.10)
+gaps_df$weekday_lag.9 <- as.factor(gaps_df$weekday_lag.9)
+gaps_df$month_lag.9 <- as.factor(gaps_df$month_lag.9)
+gaps_df$weekday_lag.8 <- as.factor(gaps_df$weekday_lag.8)
+gaps_df$month_lag.8 <- as.factor(gaps_df$month_lag.8)
+gaps_df$weekday_lag.7 <- as.factor(gaps_df$weekday_lag.7)
+gaps_df$month_lag.7 <- as.factor(gaps_df$month_lag.7)
+gaps_df$weekday_lag.6 <- as.factor(gaps_df$weekday_lag.6)
+gaps_df$month_lag.6 <- as.factor(gaps_df$month_lag.6)
+gaps_df$weekday_lag.5 <- as.factor(gaps_df$weekday_lag.5)
+gaps_df$month_lag.5 <- as.factor(gaps_df$month_lag.5)
+gaps_df$weekday_lag.4 <- as.factor(gaps_df$weekday_lag.4)
+gaps_df$month_lag.4 <- as.factor(gaps_df$month_lag.4)
+gaps_df$weekday_lag.3 <- as.factor(gaps_df$weekday_lag.3)
+gaps_df$month_lag.3 <- as.factor(gaps_df$month_lag.3)
+gaps_df$weekday_lag.2 <- as.factor(gaps_df$weekday_lag.2)
+gaps_df$month_lag.2 <- as.factor(gaps_df$month_lag.2)
+gaps_df$weekday_lag.1 <- as.factor(gaps_df$weekday_lag.1)
+gaps_df$month_lag.1 <- as.factor(gaps_df$month_lag.1)
+
+gaps_df$weekday_lag10 <- as.factor(gaps_df$weekday_lag10)
+gaps_df$month_lag10 <- as.factor(gaps_df$month_lag10)
+gaps_df$weekday_lag9 <- as.factor(gaps_df$weekday_lag9)
+gaps_df$month_lag9 <- as.factor(gaps_df$month_lag9)
+gaps_df$weekday_lag8 <- as.factor(gaps_df$weekday_lag8)
+gaps_df$month_lag8 <- as.factor(gaps_df$month_lag8)
+gaps_df$weekday_lag7 <- as.factor(gaps_df$weekday_lag7)
+gaps_df$month_lag7 <- as.factor(gaps_df$month_lag7)
+gaps_df$weekday_lag6 <- as.factor(gaps_df$weekday_lag6)
+gaps_df$month_lag6 <- as.factor(gaps_df$month_lag6)
+gaps_df$weekday_lag5 <- as.factor(gaps_df$weekday_lag5)
+gaps_df$month_lag5 <- as.factor(gaps_df$month_lag5)
+gaps_df$weekday_lag4 <- as.factor(gaps_df$weekday_lag4)
+gaps_df$month_lag4 <- as.factor(gaps_df$month_lag4)
+gaps_df$weekday_lag3 <- as.factor(gaps_df$weekday_lag3)
+gaps_df$month_lag3 <- as.factor(gaps_df$month_lag3)
+gaps_df$weekday_lag2 <- as.factor(gaps_df$weekday_lag2)
+gaps_df$month_lag2 <- as.factor(gaps_df$month_lag2)
+gaps_df$weekday_lag1 <- as.factor(gaps_df$weekday_lag1)
+gaps_df$month_lag1 <- as.factor(gaps_df$month_lag1)
+rm(file)
+```
+```{r}
+total_gaps <- nrow(gaps_df)
+cat("Total number of gaps detected:", total_gaps, "\n")
+gap_types <- summary(gaps_df$gap_type)
+up_gaps <-unname(gap_types['UP'])
+down_gaps <- unname(gap_types['DOWN'])
+cat("Gaps UP:", up_gaps,round(100*up_gaps/total_gaps,digits = 2),"%","\n")
+cat("Gaps DOWN:", down_gaps,round(100*down_gaps/total_gaps,digits = 2),"%","\n")
+```
+```{r}
+# gaps per weekday
+cat("Gaps per weekday:\n")
+round(prop.table(table(gaps_df$weekday)) * 100, digits = 2)
+cat("Gaps UP per weekday:\n")
+round(prop.table(table(gaps_df$weekday[gaps_df$gap_type =='UP'])) * 100, digits = 2)
+cat("Gaps DOWN per weekday:\n")
+round(prop.table(table(gaps_df$weekday[gaps_df$gap_type =='DOWN'])) * 100, digits = 2)
+xl <- "Day of the week"
+yl <- "Percentage"
+par(mfrow=c(2,2))
+barplot(prop.table(table(gaps_df$weekday)) * 100, main = "Gaps per weekday", xlab = xl, ylab = yl)
+barplot(prop.table(table(gaps_df$weekday[gaps_df$gap_type =='UP'])) * 100, main = "Gaps UP per weekday", xlab = xl, ylab = yl)
+barplot(prop.table(table(gaps_df$weekday[gaps_df$gap_type =='DOWN'])) * 100, main = "Gaps DOWN per weekday", xlab = xl, ylab = yl)
+```
+```{r}
+# gaps per month
+cat("Gaps per month:\n")
+round(prop.table(table(gaps_df$month)) * 100, digits = 2)
+cat("Gaps UP per month:\n")
+round(prop.table(table(gaps_df$month[gaps_df$gap_type =='UP'])) * 100, digits = 2)
+cat("Gaps DOWN per month:\n")
+round(prop.table(table(gaps_df$month[gaps_df$gap_type =='DOWN'])) * 100, digits = 2)
+xl <- "Month of the year"
+yl <- "Percentage"
+par(mfrow=c(2,2))
+barplot(prop.table(table(gaps_df$month)) * 100, main = "Gaps per month", xlab = xl, ylab = yl)
+barplot(prop.table(table(gaps_df$month[gaps_df$gap_type =='UP'])) * 100, main = "Gaps UP per month", xlab = xl, ylab = yl)
+barplot(prop.table(table(gaps_df$month[gaps_df$gap_type =='DOWN'])) * 100, main = "Gaps DOWN per month", xlab = xl, ylab = yl)
+```
+```{r}
+# Gap sizes
+qu <- quantile(gaps_df$gap_size[gaps_df$gap_size > 0],probs=c(.05,.95))
+ql <- quantile(gaps_df$gap_size[gaps_df$gap_size < 0],probs=c(.05,.95))
+xl <- "Gap size, %"
+yl <- "Frequency"
+par(mfrow=c(2,2))
+hist(100*gaps_df$gap_size[gaps_df$gap_size > 0], breaks=10000, main = "Gap UP size distribution, all", xlab = xl, ylab = yl, col = "green")
+hist(-100*gaps_df$gap_size[gaps_df$gap_size < 0], breaks=10000, main = "Gap DOWN size distribution, all", xlab = xl, ylab = yl, col = "red")
+hist(100*gaps_df$gap_size[gaps_df$gap_size > 0 & gaps_df$gap_size < unname(qu["95%"])], breaks=50, main = "Gap UP size distribution, 95%", xlab = xl, ylab = yl, col = "green")
+hist(-100*gaps_df$gap_size[gaps_df$gap_size < 0 & gaps_df$gap_size > unname(ql["5%"])], breaks=50, main = "Gap DOWN size distribution. 95%", xlab = xl, ylab = yl, col = "red")
+qu
+ql
+```
+
+```{r}
+# Gap candle range
+q <- quantile(gaps_df$range,probs=c(.01,.99))
+qu <- quantile(gaps_df$range[gaps_df$gap_type == "UP"],probs=c(.01,.99))
+qd <- quantile(gaps_df$range[gaps_df$gap_type == "DOWN"],probs=c(.01,.99))
+xl <- "Range, %"
+yl <- "Frequency"
+par(mfrow=c(3,2))
+hist(100*gaps_df$range, breaks=10000, main = "Gap candle range distribution, all", xlab = xl, ylab = yl)
+hist(100*gaps_df$range[gaps_df$range < unname(q["99%"])], breaks=50, main = "Gap candle range distribution, 99%", xlab = xl, ylab = yl)
+
+hist(100*gaps_df$range[gaps_df$gap_type == "UP"], breaks=10000, main = "Gap UP candle range distribution, all", xlab = xl, ylab = yl)
+hist(100*gaps_df$range[gaps_df$gap_type == "UP" & gaps_df$range < unname(qu["99%"])], breaks=50, main = "Gap UP candle range distribution, 99%", xlab = xl, ylab = yl, col = "green")
+
+hist(100*gaps_df$range[gaps_df$gap_type == "DOWN"], breaks=10000, main = "Gap DOWN candle range distribution, all", xlab = xl, ylab = yl)
+hist(100*gaps_df$range[gaps_df$gap_type == "DOWN" & gaps_df$range < unname(qd["99%"])], breaks=50, main = "Gap DOWN candle range distribution, 99%", xlab = xl, ylab = yl, col = "red")
+
+```
+```{r}
+# Gap candle body metric
+q <- quantile(gaps_df$candle_body_metric,probs=c(.01,.99))
+qu <- quantile(gaps_df$candle_body_metric[gaps_df$gap_type == "UP"],probs=c(.01,.99))
+qd <- quantile(gaps_df$candle_body_metric[gaps_df$gap_type == "DOWN"],probs=c(.01,.99))
+xl <- "Body Metric, %"
+yl <- "Frequency"
+par(mfrow=c(3,2))
+hist(100*gaps_df$candle_body_metric[gaps_df$candle_body_metric < unname(q["99%"]) & gaps_df$candle_body_metric > unname(q["1%"])], breaks=50, main = "Gap candle body metric distribution", xlab = xl, ylab = yl)
+boxplot(100*gaps_df$candle_body_metric, horizontal = TRUE, main = "Gap candle body metric distribution")
+
+hist(100*gaps_df$candle_body_metric[gaps_df$gap_type == "UP" & gaps_df$candle_body_metric < unname(qu["99%"]) & gaps_df$candle_body_metric > unname(qu["1%"])], breaks=50, main = "Gap UP candle body metric distribution", xlab = xl, ylab = yl,col = "green")
+boxplot(100*gaps_df$candle_body_metric[gaps_df$gap_type == "UP" & gaps_df$candle_body_metric < unname(qu["99%"])& gaps_df$candle_body_metric > unname(qu["1%"])], horizontal = TRUE, main = "Gap UP candle body metric distribution", col = "green")
+
+hist(100*gaps_df$candle_body_metric[gaps_df$gap_type == "DOWN" & gaps_df$candle_body_metric < unname(qd["99%"]) & gaps_df$candle_body_metric > unname(qd["1%"])], breaks=50, main = "Gap DOWN candle body metric distribution", xlab = xl, ylab = yl,col = "red")
+boxplot(100*gaps_df$candle_body_metric[gaps_df$gap_type == "DOWN" & gaps_df$candle_body_metric < unname(qd["99%"])& gaps_df$candle_body_metric > unname(qd["1%"])], horizontal = TRUE, main = "Gap DOWN candle body metric distribution", col = "red")
+
+```
+```{r}
+# Correlations
+# Create a sub frame
 
 
-# TODO: run some statistical analysis, produce graphs - i.e. correlations, autocorrelation, distributions, etc. - anything to show some information about gaps
+
+```
 
 ```{r}
 #cleanup
@@ -547,9 +693,3 @@ rm(list=ls())
 
 # TODO: Model it and try to predict !!!!
 we may limit it to just one day after the gap for the purpose of the project
-```{r}
-# load clean dataframe with gaps
-file <- file.choose()
-gaps_df <- read.csv(file)
-```
-
