@@ -121,8 +121,8 @@ colnames(GSPC_data ) <- c("symbol","date","open","high","low","close","volume","
 write.csv(GSPC_data,"C:\\Users\\Alex\\Documents\\IIT\\CSP571\\Assignments\\Project\\Gap-Phenomenon-in-Stock-Market\\data\\GSPC.csv", row.names = FALSE)
 ```
 
-# 4. Data Processing
-## 4.1 Loading Saved Data
+# 3. Data Processing
+## 3.1 Loading Saved Data
 ```{r}
 path <- "/home/santosh/Desktop/MASTERS/STUDIES_MSDS/SEM_2_summer/Data_preparation_and_analysis/PROJECT/git_work/Gap-Phenomenon-in-Stock-Market/data" 
 filesList <- list.files(path=path, pattern=NULL, all.files=FALSE, full.names=TRUE)
@@ -143,7 +143,7 @@ path <- "C:\\Users\\Alex\\Documents\\IIT\\CSP571\\Assignments\\Project\\Gap-Phen
 filesList <- list.files(path=path, pattern=NULL, all.files=FALSE, full.names=TRUE)
 ```
 
-## 4.2 Gap Detection
+## 3.2 Gap Detection
 ```{r}
 detect_gaps <- function(last_h, last_l, h, l)
 {
@@ -164,7 +164,7 @@ detect_gaps <- function(last_h, last_l, h, l)
 }
 ```
 
-## 4.3 Preprocessing S&P 500 index data
+## 3.3 Preprocessing S&P 500 index data
 ```{r}
 # loading data and calculating overnight returns for S&P500 index
 spxdf <- read.csv("data/GSPC.csv")
@@ -192,7 +192,7 @@ rownames(spxdf) <- spxdf$date
 ```
 
 
-## 4.4 Preprocessing Stocks Data
+## 3.4 Preprocessing Stocks Data
 Detecting gaps and types, Calculating ranges, relative volume, daily returns and adjusted daily returns and adding it into new columns 
 ```{r}
 for (file in filesList) {
@@ -289,7 +289,7 @@ write.csv(final_stock_df , file_name, row.names = FALSE)
 rm(list=ls())
 ```
 
-## 4.5 Final Data Clenup
+## 3.5 Final Data Clenup
 ```{r}
 file <- file.choose()
 gaps_df <- read.csv(file)
@@ -408,7 +408,7 @@ write.csv(gaps_df , file_name, row.names = FALSE)
 #cleanup
 rm(list=ls())
 ```
-# 5. Data Analysis
+# 4. Data Analysis
 ```{r}
 # load clean dataframe with gaps
 file <- file.choose()
@@ -461,7 +461,7 @@ gaps_df$month_lag1 <- as.factor(gaps_df$month_lag1)
 rm(file)
 ```
 
-## 5.1 Gaps Statistics
+## 4.1 Gaps Statistics
 ```{r}
 total_gaps <- nrow(gaps_df)
 cat("Total number of gaps detected:", total_gaps, "\n")
@@ -551,7 +551,7 @@ hist(100*gaps_df$candle_body_metric[gaps_df$gap_type == "DOWN" & gaps_df$candle_
 boxplot(100*gaps_df$candle_body_metric[gaps_df$gap_type == "DOWN" & gaps_df$candle_body_metric < unname(qd["99%"])& gaps_df$candle_body_metric > unname(qd["1%"])], horizontal = TRUE, main = "Gap DOWN candle body metric distribution", col = "red")
 ```
 
-## 5.2 Correlations
+## 4.2 Correlations
 ```{r}
 # Consider Correlations for quantitative variables
 # Create a sub frame
@@ -566,9 +566,9 @@ corrplot(cm, tl.cex=0.5)
 #zm()
 ```
 
-# 8. Modeling
+# 5. Modeling
 
-## 8.1 Linear Model Experiments
+## 5.1 Linear Model Experiments
 ```{r}
 # reset the dataframe, include categorical predictors: day and month
 cleandf <- gaps_df
@@ -619,7 +619,7 @@ cat("Test RMSE" , rmse(stockdf_test$return_lag.1, predictTest), "\n")
 ```
 Based on R-squared the linear model is not good. That's is OK as we just wanted to see F-statistics to help with analyzing the significance of the predictors
 
-## 8.2 Lasso Regression Experiments
+## 5.2 Lasso Regression Experiments
 
 ```{r}
 # Let's try Lasso Regression
@@ -696,4 +696,4 @@ This finding mostly matches observations for simple linear regression model. It 
 rm(list=ls())
 ```
 
-## 8.3 TODO: Neural Netwrok Model with LSTM elements
+## 5.3 TODO: Neural Netwrok Model with LSTM elements
